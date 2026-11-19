@@ -4,66 +4,61 @@
 [![rank](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 [![reward](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
-A 3D open-world driving and action game set in Equator City. You are Ari
-"Kancil" Saputra — valet by day, wheelman by night. Steal cars, drift through
-traffic, outrun the police, and work your way through seven story jobs across
-nine districts, from Pasar Kanal to the neon streets of Distrik Neon.
+A bright open-world crime game in Equator City. You play Ari "Kancil"
+Saputra, a valet in the daytime and a getaway driver after dark, at the
+wheel of the Broombroom S1 — a home-built electric buggy prototype.
 
-## The city
+Take any car you see, drift the avenues, shake off the police, and run
+seven story jobs across nine districts, from the canal market to the
+neon quarter.
 
-Equator City is a bright, dense grid city with a plaza fountain, a green hill
-park, a harbour, a campus, and a neon district that comes alive after dark.
-Shop signs, streetlights, traffic, and pedestrians fill the streets, and every
-building window glows warm at night.
+## Playing
 
-## Vehicles
+- Drive or walk in third person through a dense tropical grid city:
+  a plaza with a fountain, a hill park, a harbour, a campus, and a
+  neon district that lights up at night.
+- Grab any civilian car on the street. Every car handles differently,
+  and hard knocks show up as visible damage and on the condition gauge.
+- Drift with the handbrake to rack up a drift score, smoke trailing
+  from the back wheels.
+- Work the job list: valet shifts, deliveries, taxi rushes, midnight
+  runs, and a full tour of the city. Finishing a job pays and moves
+  the story on.
+- Stir up trouble on foot and the wanted stars rise — patrol sedans
+  and the interceptor will come after you.
+- Park your cars in the garage at Plaza Merdeka and respray them there.
+- Open the city map to see all nine districts and the jobs on offer.
+- Your money, garage, and job progress save in the browser.
 
-- **Broombroom S1** — the hero car: an open-frame electric buggy prototype,
-  fast, nimble, and built for drifting. It is yours from the start.
-- **Bajaj** — small and nimble. **Angkot minibus** and **open pickup** — heavy
-  and slow to turn. **Sedan** and **taxi** — balanced all-rounders.
-- **Police sedan** and **interceptor** — they will chase you when your wanted
-  level rises.
+## Cars
 
-Every civilian car can be stolen. Each vehicle has its own handling, and
-damage shows on the car and on the condition meter in the HUD.
-
-## What you can do
-
-- Drive and walk around the city in third person.
-- Steal any parked or moving civilian car.
-- Handbrake-drift to build a drift score, with smoke pouring off the rear
-  wheels.
-- Take on story jobs: valet shifts, deliveries, taxi rushes, midnight runs,
-  and a grand tour of the city. Each job pays out and updates its status.
-- Fight on foot and attract police attention — the wanted stars climb, and
-  patrol cars hunt you down.
-- Keep your cars in the garage at Plaza Merdeka and respray them there.
-- Check the full city map with all nine districts and the job list.
-- Progress is saved automatically in the browser.
+- **Broombroom S1** — your hero buggy: open-frame, electric, quick
+  off the line and made to slide. Yours from the start.
+- **Bajaj** — tiny and nimble.
+- **Angkot** and **pickup** — heavy, slow to turn, hard to push around.
+- **Sedan** and **taxi** — steady all-rounders.
+- **Police sedan** and **interceptor** — the pursuit cars.
 
 ## Controls
 
-| Key | Action |
-| --- | --- |
-| W A S D | Drive / walk |
-| Space | Handbrake drift |
-| E | Enter / exit car |
-| F | Shoot (on foot) |
-| G | Respray at the garage |
-| M | City map |
+- **W A S D** — drive / walk
+- **Space** — handbrake drift
+- **E** — get in / out of a car
+- **F** — shoot on foot
+- **G** — respray at the garage
+- **M** — city map
 
-## How to run
+## Running it
 
-The game is a static site with no build step. Because it uses ES modules, it
-must be served over HTTP — opening the file directly will not work.
+No build step, just static files. It uses ES modules, so serve it over
+HTTP instead of opening the file directly:
 
 ```sh
 cd game
 python3 -m http.server 8123
 ```
 
-Then open <http://localhost:8123> in a browser.
+Then open <http://localhost:8123>.
 
-Built with Three.js (vendored, no network needed), fully offline, with a
-seeded world so every run generates the same city.
+Three.js is vendored in the repo, so the game runs fully offline, and
+the city is seeded — the same streets, traffic, and signs every run.
