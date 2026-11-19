@@ -1,4 +1,5 @@
-// rng.js — seeded RNG for Equator Drive. Deterministic world gen; no Math.random in world code.
+// rng.js — seeded RNG for Equator Drive (fresh, session revision-2).
+// Deterministic: same seed -> same city, traffic and shot layout.
 export function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -8,12 +9,14 @@ export function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-export function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
-export function range(rng, lo, hi) { return lo + rng() * (hi - lo); }
-export function rangeInt(rng, lo, hi) { return Math.floor(range(rng, lo, hi + 1)); }
-export function shade(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
-  let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
-  r = Math.max(0, Math.min(255, r)); g = Math.max(0, Math.min(255, g)); b = Math.max(0, Math.min(255, b));
-  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+export function makeRng(seed) {
+  const rand = mulberry32(seed);
+  return {
+    next: rand,
+    range: (lo, hi) => lo + rand() * (hi - lo),
+    int: (lo, hi) => Math.floor(lo + rand() * (hi - lo + 1)),
+    pick: (arr) => arr[Math.floor(rand() * arr.length)],
+    chance: (p) => rand() < p,
+  };
 }
+export const WORLD_SEED = 20261119;

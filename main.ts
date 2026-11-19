@@ -1,30 +1,19 @@
-// main.ts — Equator Drive hand-in. Copies game/ + screenshots/ to the output dir and writes dossier.json.
-// Fresh build for gta6-01 revision. Vendor library is the kit copy, unchanged.
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+// main.ts — Equator Drive entry builder (fresh, session revision-2).
+// Copies game/ + screenshots/ to /output and writes dossier.json with the kit's
+// buildDossier (vendor/makefun-game.ts, copied verbatim, never edited).
+// Run: node main.ts   (Node 22, no flags, no install)
+import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { buildDossier } from './vendor/makefun-game.ts';
 
-const repoRoot = dirname(fileURLToPath(import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR || '/output';
-
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
-
-const gameSrc = join(repoRoot, 'game');
-const shotsSrc = join(repoRoot, 'screenshots');
-if (!existsSync(gameSrc)) throw new Error('game/ missing in repo');
-if (!existsSync(shotsSrc)) throw new Error('screenshots/ missing in repo');
-
-cpSync(gameSrc, join(outDir, 'game'), { recursive: true });
-cpSync(shotsSrc, join(outDir, 'screenshots'), { recursive: true });
-
-const dossier = buildDossier(outDir, {
+const OUT = process.env.MAKEFUN_OUTPUT_DIR || '/output';
+rmSync(OUT, { recursive: true, force: true });
+mkdirSync(OUT, { recursive: true });
+cpSync('game', `${OUT}/game`, { recursive: true });
+cpSync('screenshots', `${OUT}/screenshots`, { recursive: true });
+writeFileSync(`${OUT}/dossier.json`, buildDossier(OUT, {
   text_max_bytes: 163840,
   screenshots: { max: 4, max_bytes: 262144 },
   game_max_files: 993,
-  game_max_bytes: 48 * 1024 * 1024,
-  game_path_max_bytes: 1000,
-});
-writeFileSync(join(outDir, 'dossier.json'), dossier);
-console.log('dossier written:', join(outDir, 'dossier.json'), dossier.length, 'bytes');
+  game_max_bytes: 50331648,
+}));
+console.log(`Equator Drive: ${OUT} written (game/ + screenshots/ + dossier.json)`);

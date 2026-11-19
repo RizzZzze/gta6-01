@@ -1,110 +1,132 @@
-// textures.js — canvas-generated facades, roads and signs for Equator Drive.
-// Real painted facades (window grids, shopfronts, signage) so no building is a plain box.
-import { pick, rangeInt } from './rng.js';
+// textures.js — all canvas textures for Equator Drive (fresh, session revision-2).
+// Rules learned from the last build: road must NOT be striped; shop signs must
+// read upright (no mirrored UV); night windows must glow warm.
+import * as THREE from 'three';
 
-function canvas(w, h) {
+function canvasTex(w, h, draw) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
-  return [c, c.getContext('2d')];
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
 }
 
-export function facadeTexture(rng, base, floors, style) {
-  const W = 256, H = 256;
-  const [c, g] = canvas(W, H);
-  g.fillStyle = base; g.fillRect(0, 0, W, H);
-  // subtle vertical grime + panel lines
-  for (let i = 0; i < 40; i++) {
-    g.fillStyle = 'rgba(0,0,0,' + (0.02 + rng() * 0.05).toFixed(3) + ')';
-    g.fillRect(Math.floor(rng() * W), 0, 2 + Math.floor(rng() * 6), H);
-  }
-  const cols = style === 'tower' ? 6 : 5;
-  const rows = Math.max(3, Math.min(9, floors));
-  const cw = W / cols, ch = (H - 46) / rows;
-  for (let r = 0; r < rows; r++) {
-    for (let col = 0; col < cols; col++) {
-      const x = col * cw + 6, y = 10 + r * ch + 5;
-      const lit = rng() < 0.28;
-      g.fillStyle = '#20242c'; g.fillRect(x - 2, y - 2, cw - 8, ch - 10);
-      g.fillStyle = lit ? '#ffe9a8' : (rng() < 0.5 ? '#9fd8e8' : '#5f7d9a');
-      g.fillRect(x, y, cw - 12, ch - 14);
-      g.fillStyle = 'rgba(255,255,255,0.25)';
-      g.fillRect(x, y, cw - 12, 3);
-      // balcony rail on some windows
-      if (rng() < 0.3) { g.fillStyle = '#2c2f36'; g.fillRect(x, y + ch - 16, cw - 12, 3); }
+export function asphaltTexture(rng) {
+  return canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#4a4d52'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) {
+      const v = rng.int(58, 98);
+      g.fillStyle = `rgb(${v},${v + 2},${v + 5})`;
+      g.fillRect(rng.range(0, w), rng.range(0, h), 2, 2);
     }
-  }
-  // ground floor: shopfront with awning + sign band
-  g.fillStyle = '#1d2126'; g.fillRect(0, H - 46, W, 46);
-  const shopColors = ['#ff5a5f', '#ffb400', '#19b8a6', '#7c5cff', '#ff7ab8'];
-  const shop = pick(rng, shopColors);
-  g.fillStyle = shop; g.fillRect(0, H - 46, W, 14);
-  g.fillStyle = '#fff'; g.font = 'bold 13px Arial'; g.textAlign = 'center';
-  const names = ['KOPI KANCIL', 'WARUNG 24', 'BENGKEL BROOM', 'PASAR PAGI', 'TOKO HP', 'BAKSO 88', 'LAUNDRY', 'FOTO COPY'];
-  g.fillText(pick(rng, names), W / 2, H - 35);
-  g.fillStyle = '#cfe8ef';
-  for (let i = 0; i < 3; i++) g.fillRect(14 + i * 82, H - 30, 68, 26);
-  g.fillStyle = 'rgba(0,0,0,0.25)';
-  for (let i = 0; i < 3; i++) g.fillRect(14 + i * 82, H - 30, 68, 4);
-  // awning stripes
-  for (let i = 0; i < 8; i++) {
-    g.fillStyle = i % 2 ? '#ffffff' : shop;
-    g.fillRect(i * 32, H - 46, 32, 6);
-  }
-  return c;
+    // faint edge lines only — no stripes across the road
+    g.fillStyle = 'rgba(230,230,220,0.55)';
+    g.fillRect(6, 0, 3, h); g.fillRect(w - 9, 0, 3, h);
+  });
 }
 
-export function roadTexture(rng) {
-  const [c, g] = canvas(256, 256);
-  g.fillStyle = '#33363d'; g.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 900; i++) {
-    g.fillStyle = 'rgba(255,255,255,' + (rng() * 0.04).toFixed(3) + ')';
-    g.fillRect(Math.floor(rng() * 256), Math.floor(rng() * 256), 2, 2);
-  }
-  g.fillStyle = '#f5c542';
-  g.fillRect(124, 0, 4, 256);
-  g.fillStyle = '#e8e8e8';
-  for (let y = 0; y < 256; y += 64) { g.fillRect(60, y, 4, 32); g.fillRect(192, y, 4, 32); }
-  return c;
-}
-
-export function plazaTexture(rng) {
-  const [c, g] = canvas(256, 256);
-  g.fillStyle = '#b8a88a'; g.fillRect(0, 0, 256, 256);
-  g.strokeStyle = 'rgba(0,0,0,0.18)'; g.lineWidth = 2;
-  for (let i = 0; i <= 4; i++) {
-    g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, 256); g.stroke();
-    g.beginPath(); g.moveTo(0, i * 64); g.lineTo(256, i * 64); g.stroke();
-  }
-  g.fillStyle = '#19b8a6'; g.beginPath(); g.arc(128, 128, 34, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#8fd8ce'; g.beginPath(); g.arc(128, 128, 22, 0, Math.PI * 2); g.fill();
-  return c;
-}
-
-export function billboardTexture(rng, lines, bg, fg) {
-  const [c, g] = canvas(512, 256);
-  g.fillStyle = bg; g.fillRect(0, 0, 512, 256);
-  g.fillStyle = fg; g.font = 'bold 44px Arial'; g.textAlign = 'center';
-  lines.forEach((t, i) => g.fillText(t, 256, 92 + i * 56));
-  g.strokeStyle = fg; g.lineWidth = 6; g.strokeRect(10, 10, 492, 236);
-  g.fillStyle = '#ff5a5f'; g.fillRect(30, 200, 120, 30);
-  g.fillStyle = '#fff'; g.font = 'bold 18px Arial'; g.fillText('EQUATOR', 90, 221);
-  return c;
-}
-
-export function signTexture(text, bg, fg) {
-  const [c, g] = canvas(256, 64);
-  g.fillStyle = bg; g.fillRect(0, 0, 256, 64);
-  g.fillStyle = fg; g.font = 'bold 26px Arial'; g.textAlign = 'center';
-  g.fillText(text, 128, 41);
-  return c;
+export function pavementTexture(rng) {
+  return canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#8f8a80'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(0,0,0,0.18)'; g.lineWidth = 2;
+    for (let x = 0; x <= w; x += 64) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+    for (let y = 0; y <= h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+    for (let i = 0; i < 500; i++) {
+      g.fillStyle = `rgba(0,0,0,${rng.range(0.02, 0.08)})`;
+      g.fillRect(rng.range(0, w), rng.range(0, h), 3, 3);
+    }
+  });
 }
 
 export function grassTexture(rng) {
-  const [c, g] = canvas(128, 128);
-  g.fillStyle = '#58a34c'; g.fillRect(0, 0, 128, 128);
-  for (let i = 0; i < 300; i++) {
-    g.fillStyle = rng() < 0.5 ? '#4c9243' : '#68b45c';
-    g.fillRect(Math.floor(rng() * 128), Math.floor(rng() * 128), 3, 3);
-  }
-  return c;
+  return canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#4d8a3f'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1800; i++) {
+      g.fillStyle = rng.pick(['#5da24a', '#3f7a34', '#6fb055', '#47843a']);
+      g.fillRect(rng.range(0, w), rng.range(0, h), 4, 4);
+    }
+  });
+}
+
+// Building facade: window grid. litRatio = fraction of windows glowing warm.
+// Day: mostly dark glass, few lit. Night: most lit warm yellow.
+export function facadeTexture(base, rng, litRatio, night) {
+  return canvasTex(256, 512, (g, w, h) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    // subtle vertical panel shading
+    for (let x = 0; x < w; x += 32) {
+      g.fillStyle = 'rgba(0,0,0,0.08)'; g.fillRect(x, 0, 2, h);
+    }
+    const cols = 6, rows = 12;
+    const cw = w / cols, ch = h / rows;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = c * cw + 5, y = r * ch + 6, ww = cw - 10, hh = ch - 12;
+        if (rng.chance(litRatio)) {
+          g.fillStyle = night ? rng.pick(['#ffd97a', '#ffbe4d', '#ffe9a8', '#ffb347']) : '#ffe6a0';
+          g.fillRect(x, y, ww, hh);
+          g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(x, y, ww, 3);
+        } else {
+          g.fillStyle = night ? '#1c2433' : '#2b3a4d';
+          g.fillRect(x, y, ww, hh);
+          g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(x, y, ww, 4);
+        }
+        g.strokeStyle = 'rgba(0,0,0,0.35)'; g.strokeRect(x, y, ww, hh);
+      }
+    }
+    // ground-floor shop band
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, h - 42, w, 42);
+  });
+}
+
+// Shop sign — text drawn upright, used on a plane facing the street.
+export function signTexture(text, bg, fg, sub) {
+  return canvasTex(512, 128, (g, w, h) => {
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = fg; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12);
+    g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = 'bold 56px Arial, sans-serif';
+    g.fillText(text, w / 2, sub ? h / 2 - 16 : h / 2);
+    if (sub) { g.font = 'bold 28px Arial, sans-serif'; g.fillText(sub, w / 2, h / 2 + 34); }
+  });
+}
+
+// Neon sign: glowing text on transparent background.
+export function neonTexture(text, color) {
+  return canvasTex(512, 128, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = 'bold 64px Arial, sans-serif';
+    g.shadowColor = color; g.shadowBlur = 28;
+    g.fillStyle = color;
+    g.fillText(text, w / 2, h / 2);
+    g.fillText(text, w / 2, h / 2);
+    g.shadowBlur = 0; g.fillStyle = '#ffffff';
+    g.font = 'bold 64px Arial, sans-serif';
+    g.fillText(text, w / 2, h / 2);
+  });
+}
+
+// Soft round light-pool decal for streetlights at night.
+export function lightPoolTexture() {
+  return canvasTex(128, 128, (g, w, h) => {
+    const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+    grad.addColorStop(0, 'rgba(255,210,130,0.85)');
+    grad.addColorStop(0.6, 'rgba(255,190,100,0.28)');
+    grad.addColorStop(1, 'rgba(255,190,100,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  });
+}
+
+// Soft smoke puff sprite — many small, faint, dispersing (NOT big cotton balls).
+export function smokeTexture() {
+  return canvasTex(128, 128, (g, w, h) => {
+    const grad = g.createRadialGradient(64, 64, 4, 64, 64, 60);
+    grad.addColorStop(0, 'rgba(235,235,235,0.55)');
+    grad.addColorStop(0.5, 'rgba(225,225,225,0.22)');
+    grad.addColorStop(1, 'rgba(225,225,225,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  });
 }

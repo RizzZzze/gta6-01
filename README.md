@@ -1,12 +1,35 @@
-# gta6-01
+# Equator Drive — Make GTA 6 (gta6-01)
 
 [![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
-[![rank](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
-[![reward](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
-EQUATOR DRIVE — an original open-world crime game set in Equator City. You are Ari "Kancil" Saputra, a valet with the prototype EV **Broombroom S1** for one day: run three missions from the Garage to the Plaza to the waterfront, steal cars (bajaj, angkot, pickup, sedan, taxi), drift for style, and outrun the Equator Police. Bright daytime is the city's signature light; one mission runs at night under neon.
+Open-world crime game set in **Equator City**, a bright tropical grid city.
+You are Ari "Kancil" Saputra, valet by day, wheelman by night, driving the
+electric prototype buggy **Broombroom S1**.
 
-Complete: a city on foot and by car, traffic and pedestrians, stealable cars, a wanted system with police pursuit, 3 story missions, on-foot combat, a garage with respray, a HUD with minimap, a full city map, a start screen and a save. Runs offline from static files with zero network requests.
+## Play
+
+- **WASD / arrows** — drive or walk. **Space** — handbrake drift (smoke + DRIFT score).
+- **E** — enter / exit a car (every civilian car can be stolen). **F** — shoot on foot.
+- **G** — respray at the garage (Plaza Merdeka, saves to your garage). **M** — full city map.
+- Wanted stars rise when you speed past police or shoot; police sedans and the
+  Interceptor chase you at 2+ stars. Vehicle condition falls on hard hits.
+- 7 story jobs across 9 districts, from a valet shift to a midnight run to the harbour.
+- Progress saves to localStorage (money, garage, active job) and shows on the start screen.
+
+## Vehicles
+
+Bajaj (nimble), angkot minibus (heavy), open-bed pickup (heavy), sedan and taxi
+(balanced), police sedan + Interceptor (pursuit), and the hero Broombroom S1
+(fast / fun — open-frame electric buggy, big off-road wheels, magenta accents).
+
+## Tech
+
+- Three.js (vendored under `game/vendor/`), ES modules + import map, no build step.
+- Static files in `game/` — `game/index.html` loads offline with zero network requests.
+- Seeded RNG (`WORLD_SEED`) — same seed, same city, traffic and shots.
+- Deterministic shots: `game/index.html?shot=cover|start|night|map` renders a fixed
+  frame (cover = daytime drift chase, start = start screen over Plaza Merdeka,
+  night = neon on-foot combat, map = full city map with 7 jobs + 9 districts).
 
 ## Run it
 
@@ -14,17 +37,17 @@ Complete: a city on foot and by car, traffic and pedestrians, stealable cars, a 
 cd game && python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080 in desktop Chrome. Keyboard: WASD drive/walk, E enter or steal a car, SPACE handbrake drift, R respray at the Garage, click to shoot, SHIFT sprint, M mute.
-
-Shots: `?shot=cover` day chase, `?shot=start` start screen, `?shot=night` night combat on foot, `?shot=map` full city map. `?seed=7` makes the world deterministic.
+Then open http://localhost:8080 in desktop Chrome.
 
 ## Enter it
 
 ```sh
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+node main.ts
 ```
 
-`main.ts` copies `game/` and `screenshots/` to the output directory and writes `dossier.json` with the vendored make.fun library.
+`main.ts` copies `game/` and `screenshots/` to the output directory
+(`$MAKEFUN_OUTPUT_DIR`, default `/output`) and writes `dossier.json` with the
+make.fun kit (`vendor/makefun-game.ts`, verbatim copy).
 
 ---
 
