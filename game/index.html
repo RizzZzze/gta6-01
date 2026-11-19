@@ -3,179 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="data:,">
-<title>EQUATOR DRIVE — Equator City</title>
+<title>Equator Drive — Make GTA 6</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a1420;
-    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: #fff; }
-  #scene { position: fixed; inset: 0; }
-  #scene canvas { display: block; }
-  .panel { background: rgba(6, 12, 22, 0.78); border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(2px); }
-  .label { font-size: 10px; letter-spacing: 2px; color: #9fd8ff; text-transform: uppercase; }
-  .big { font-size: 20px; font-weight: 800; line-height: 1.1; }
-  #hud { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 5; }
-  #hud.on { display: block; }
-  #mission-panel { position: absolute; top: 14px; left: 14px; width: 300px; }
-  #mission-panel .big { color: #ffd75e; }
-  #mission-next { font-size: 13px; color: #fff; margin-top: 4px; }
-  #mission-timer { font-size: 13px; color: #7dffb0; margin-top: 2px; font-weight: 700; }
-  #status-panel { position: absolute; top: 14px; right: 14px; text-align: right; }
-  #wanted { font-size: 26px; letter-spacing: 4px; color: #ffd75e; text-shadow: 0 0 8px #000; }
-  #wanted .off { color: rgba(255,255,255,0.25); }
-  #money { font-size: 22px; font-weight: 800; color: #7dffb0; }
-  #clock { font-size: 13px; color: #fff; }
-  #police-panel { position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-    width: 330px; text-align: center; }
-  #police-list { font-size: 12px; line-height: 1.5; color: #fff; }
-  #police-list b { color: #ff5d5d; }
-  #minimap-wrap { position: absolute; right: 14px; bottom: 14px; text-align: center; }
-  #minimap { border-radius: 50%; border: 3px solid rgba(255,255,255,0.85);
-    box-shadow: 0 0 0 3px rgba(6,12,22,0.8); background: #0d2733; }
-  #district { margin-top: 6px; font-size: 14px; font-weight: 800; letter-spacing: 1px;
-    text-shadow: 0 1px 3px #000; }
-  #drive-panel { position: absolute; right: 14px; bottom: 216px; text-align: right; }
-  #speed { font-size: 34px; font-weight: 900; line-height: 1; text-shadow: 0 2px 4px #000; }
-  #speed small { font-size: 13px; font-weight: 700; color: #cfeaff; }
-  #condition-bar { width: 170px; height: 10px; background: rgba(255,255,255,0.25);
-    border-radius: 5px; margin-top: 6px; overflow: hidden; }
-  #condition-fill { height: 100%; width: 100%; background: #7dffb0; }
-  #weapon-panel { position: absolute; left: 14px; bottom: 14px; }
-  #weapon-slots { display: flex; gap: 8px; margin-top: 4px; }
-  .slot { min-width: 74px; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 8px; background: rgba(6,12,22,0.7); font-size: 12px; text-align: center; }
-  .slot.active { border-color: #ffd75e; background: rgba(80,60,0,0.75); }
-  .slot .ammo { color: #ffd75e; font-weight: 700; }
-  #radio-panel { position: absolute; left: 14px; bottom: 108px; width: 230px; }
-  #radio-track { font-size: 13px; font-weight: 700; }
-  #eq { display: flex; gap: 3px; align-items: flex-end; height: 18px; margin-top: 5px; }
-  #eq i { width: 6px; background: #ff2e88; display: block; }
-  #dialogue { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
-    width: 560px; display: none; align-items: center; gap: 12px; }
-  #dialogue.on { display: flex; }
-  #portrait { width: 58px; height: 58px; border-radius: 50%; flex: none;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 900; border: 2px solid #fff; }
-  #dialogue-text { font-size: 15px; line-height: 1.35; }
-  #dialogue-name { font-size: 11px; letter-spacing: 2px; color: #ffd75e; font-weight: 800; }
-  #banner { position: absolute; top: 34%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 44px; font-weight: 900; letter-spacing: 6px; color: #fff;
-    text-shadow: 0 0 18px #ff2e88, 0 3px 0 #000; display: none; }
-  #banner.on { display: block; }
-  #drift { position: absolute; right: 220px; bottom: 240px; font-size: 22px; font-weight: 900;
-    color: #ffd75e; text-shadow: 0 2px 4px #000; display: none; }
-  #drift.on { display: block; }
-  #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px;
-    transform: translate(-50%, -50%); display: none; }
-  #crosshair.on { display: block; }
-  #crosshair:before, #crosshair:after { content: ""; position: absolute; background: #fff;
-    box-shadow: 0 0 3px #000; }
-  #crosshair:before { left: 10px; top: 0; width: 2px; height: 22px; }
-  #crosshair:after { left: 0; top: 10px; width: 22px; height: 2px; }
-  #hint { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%);
-    font-size: 13px; background: rgba(6,12,22,0.75); padding: 6px 12px; border-radius: 8px; }
-  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 4; display: none;
-    box-shadow: inset 0 0 120px 40px rgba(255,0,0,0.45); }
-  #vignette.on { display: block; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1026; font-family: Arial, Helvetica, sans-serif; }
+  #game { display: block; width: 100%; height: 100%; }
+  .hidden { display: none !important; }
+  /* HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; display: none; }
+  #hud.show { display: block; }
+  #topbar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .panel { background: rgba(8, 14, 24, 0.72); border: 1px solid rgba(255,255,255,0.22); border-radius: 10px; color: #fff; padding: 10px 14px; backdrop-filter: blur(2px); }
+  #money { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; color: #7dff9a; }
+  #stars { font-size: 22px; letter-spacing: 4px; color: #ffc400; margin-top: 2px; }
+  #mission { max-width: 430px; }
+  #mission-title { font-size: 15px; font-weight: 900; color: #ffc400; letter-spacing: 0.5px; }
+  #mission-text { font-size: 13px; color: #e8f2f5; margin-top: 4px; line-height: 1.35; }
+  #speedbox { position: absolute; right: 16px; bottom: 16px; text-align: right; min-width: 170px; }
+  #speed { font-size: 38px; font-weight: 900; color: #fff; line-height: 1; }
+  #car-name { font-size: 13px; color: #cfe8ef; margin-top: 4px; }
+  #damage-row { margin-top: 8px; font-size: 11px; color: #cfe8ef; text-align: left; }
+  #damage-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-top: 3px; overflow: hidden; }
+  #damage-fill { height: 100%; width: 100%; background: #19b8a6; }
+  #minimap-wrap { position: absolute; left: 16px; bottom: 16px; }
+  #minimap { border-radius: 10px; border: 2px solid rgba(255,255,255,0.35); background: #0e2a22; display: block; }
+  #minimap-label { font-size: 11px; color: #fff; background: rgba(8,14,24,0.72); padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 5px; letter-spacing: 1px; }
+  #controls-hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #fff; background: rgba(8,14,24,0.6); padding: 7px 12px; border-radius: 8px; white-space: nowrap; }
+  #drift { position: absolute; top: 22%; left: 50%; transform: translateX(-50%) rotate(-4deg); font-size: 32px; font-weight: 900; color: #ff2e88; text-shadow: 0 3px 0 #fff, 0 6px 18px rgba(0,0,0,0.5); display: none; }
+  #drift.show { display: block; }
+  #toast { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); background: rgba(8,14,24,0.85); color: #fff; border: 1px solid #ffc400; padding: 10px 18px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.25s; max-width: 80%; text-align: center; }
+  #toast.show { opacity: 1; }
+  /* Start / end screens */
+  .screen { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; background: linear-gradient(160deg, rgba(6,20,32,0.55), rgba(20,8,32,0.5)); color: #fff; }
+  .screen.show { display: flex; }
+  .card { max-width: 620px; margin: 16px; text-align: center; background: rgba(8,14,24,0.72); border: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 34px 38px; }
+  .kicker { color: #19b8a6; font-weight: 900; letter-spacing: 4px; font-size: 13px; }
+  h1 { font-size: 56px; font-weight: 900; letter-spacing: 1px; margin: 10px 0 4px; }
+  h1 span { color: #ff2e88; }
+  .tagline { font-size: 16px; color: #cfe8ef; line-height: 1.5; }
+  .story { font-size: 14px; color: #e8f2f5; line-height: 1.55; margin-top: 14px; text-align: left; }
+  .story b { color: #ffc400; }
+  .btnrow { margin-top: 22px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  button { pointer-events: auto; cursor: pointer; font-size: 16px; font-weight: 800; border: none; border-radius: 10px; padding: 13px 24px; color: #fff; background: #ff2e88; }
+  button.secondary { background: #0e7d74; }
+  button.ghost { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.4); }
+  #save-line { margin-top: 14px; font-size: 13px; color: #9fd8e8; }
+  .keys { margin-top: 18px; font-size: 12px; color: #b8c8d0; line-height: 1.7; }
+  .keys b { color: #fff; background: rgba(255,255,255,0.14); padding: 2px 7px; border-radius: 5px; }
+  #end-title { font-size: 52px; font-weight: 900; color: #ff4444; }
+  #end-sub { font-size: 15px; color: #e8f2f5; margin-top: 10px; line-height: 1.5; }
+  #map-panel { position: fixed; inset: 0; z-index: 6; display: none; pointer-events: none; }
+  #map-panel.show { display: block; }
+  #map-title { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: 26px; font-weight: 900; color: #fff; background: rgba(8,14,24,0.78); padding: 10px 22px; border-radius: 12px; letter-spacing: 2px; }
+  #map-legend { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 13px; color: #fff; background: rgba(8,14,24,0.78); padding: 9px 16px; border-radius: 10px; }
+  #map-legend b { color: #ffc400; }
 </style>
-</head>
-<body>
-<div id="scene"></div>
-<div id="vignette"></div>
-
-<div id="hud">
-  <div id="mission-panel" class="panel">
-    <div class="label">Current Job</div>
-    <div class="big" id="mission-title">Valet Shift</div>
-    <div id="mission-next">Drive to the Valet Stand in Delta Towers.</div>
-    <div id="mission-timer"></div>
-  </div>
-  <div id="police-panel" class="panel">
-    <div class="label">Police Response</div>
-    <div id="police-list">No units assigned.</div>
-  </div>
-  <div id="status-panel" class="panel">
-    <div id="wanted"><span class="off">★</span><span class="off">★</span><span class="off">★</span><span class="off">★</span></div>
-    <div id="money">$1,250</div>
-    <div id="clock">DAY 1 &nbsp; 09:12</div>
-  </div>
-  <div id="drive-panel" class="panel">
-    <div class="label" id="vehicle-name">ON FOOT</div>
-    <div id="speed">0 <small>km/h</small></div>
-    <div id="condition-bar"><div id="condition-fill"></div></div>
-  </div>
-  <div id="minimap-wrap">
-    <canvas id="minimap" width="180" height="180"></canvas>
-    <div id="district">DELTA TOWERS</div>
-  </div>
-  <div id="radio-panel" class="panel">
-    <div class="label" id="radio-station">EQUATOR FM 98.5</div>
-    <div id="radio-track">Solar Winds — The Meridian Line</div>
-    <div id="eq"><i style="height:8px"></i><i style="height:16px"></i><i style="height:11px"></i><i style="height:18px"></i><i style="height:7px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:17px"></i></div>
-  </div>
-  <div id="weapon-panel" class="panel">
-    <div class="label">Weapons</div>
-    <div id="weapon-slots">
-      <div class="slot active" id="slot-fists">FISTS<br><span class="ammo">—</span></div>
-      <div class="slot" id="slot-pistol">PISTOL<br><span class="ammo">48</span></div>
-      <div class="slot" id="slot-smg">SMG<br><span class="ammo">120</span></div>
-    </div>
-  </div>
-  <div id="dialogue" class="panel">
-    <div id="portrait" style="background:#ff2e88">A</div>
-    <div><div id="dialogue-name">ARI "KANCIL" SAPUTRA</div><div id="dialogue-text"></div></div>
-  </div>
-  <div id="banner"></div>
-  <div id="drift">DRIFT +0</div>
-  <div id="crosshair"></div>
-  <div id="hint">WASD move / drive &nbsp;·&nbsp; E enter &amp; exit car &nbsp;·&nbsp; SPACE handbrake &nbsp;·&nbsp; F shoot &nbsp;·&nbsp; M map &nbsp;·&nbsp; C camera</div>
-</div>
-
-<div id="start-screen" style="position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0a2a44 0%,#123a5c 45%,#3d0f38 100%);">
-  <div style="width:720px;max-width:94vw;padding:28px;">
-    <div style="font-size:13px;letter-spacing:5px;color:#7dffb0;font-weight:800;">EQUATOR CITY &nbsp;·&nbsp; AN OPEN-WORLD CRIME STORY</div>
-    <h1 style="font-size:64px;line-height:0.95;font-weight:900;margin:10px 0 4px;">EQUATOR<br>DRIVE</h1>
-    <p style="font-size:15px;color:#dcefff;max-width:560px;">Ari "Kancil" Saputra, a valet framed for stealing the Broombroom S1 electric buggy prototype, must clear his name across five districts — one job at a time.</p>
-    <div style="display:flex;gap:12px;margin-top:18px;">
-      <div class="panel" style="flex:1;"><div class="label">Crew</div>
-        <div style="display:flex;gap:10px;margin-top:8px;">
-          <div style="text-align:center;"><div style="width:52px;height:52px;border-radius:50%;background:#ff2e88;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;">A</div><div style="font-size:11px;margin-top:4px;">ARI<br>Driver</div></div>
-          <div style="text-align:center;"><div style="width:52px;height:52px;border-radius:50%;background:#2e9bff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;">N</div><div style="font-size:11px;margin-top:4px;">Nadia<br>Fixer</div></div>
-          <div style="text-align:center;"><div style="width:52px;height:52px;border-radius:50%;background:#ffb02e;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;">B</div><div style="font-size:11px;margin-top:4px;">Bimo<br>Mechanic</div></div>
-        </div>
-      </div>
-      <div class="panel" style="flex:1;"><div class="label">How to Play</div>
-        <div style="font-size:13px;line-height:1.7;margin-top:6px;">WASD — move / drive<br>E — enter &amp; exit vehicles<br>SPACE — handbrake drift<br>F — shoot &nbsp;·&nbsp; M — city map<br>Steal parked cars, lose the police,<br>finish all 7 story jobs.</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:18px;align-items:center;">
-      <button id="btn-continue" style="pointer-events:auto;cursor:pointer;font-size:17px;font-weight:800;padding:13px 26px;border-radius:10px;border:0;background:#ff2e88;color:#fff;">CONTINUE</button>
-      <button id="btn-new" style="pointer-events:auto;cursor:pointer;font-size:17px;font-weight:800;padding:13px 26px;border-radius:10px;border:2px solid #fff;background:transparent;color:#fff;">NEW GAME</button>
-      <div id="save-state" style="font-size:13px;color:#cfeaff;">No save yet — start a new game.</div>
-    </div>
-    <div style="font-size:11px;color:#9fb8cc;margin-top:14px;">Runs offline. No network. Keyboard + mouse. Save is stored in this browser.</div>
-  </div>
-</div>
-
-<div id="map-screen" style="position:fixed;inset:0;z-index:9;display:none;background:#040a12;padding:22px;">
-  <div style="display:flex;gap:20px;height:100%;">
-    <div style="flex:1;display:flex;flex-direction:column;">
-      <div style="font-size:13px;letter-spacing:4px;color:#7dffb0;font-weight:800;">CITY MAP — EQUATOR CITY</div>
-      <canvas id="bigmap" width="760" height="640" style="width:100%;aspect-ratio:760/640;max-height:100%;background:#0d2733;border:1px solid rgba(255,255,255,0.25);border-radius:10px;margin-top:10px;"></canvas>
-    </div>
-    <div style="width:340px;">
-      <div class="panel"><div class="label">Story Jobs — 7</div><div id="job-list" style="font-size:13px;line-height:1.9;margin-top:6px;"></div></div>
-      <div class="panel" style="margin-top:12px;"><div class="label">Activities</div><div style="font-size:13px;line-height:1.9;margin-top:6px;">&#9679; Garage — store cars &amp; respray<br>&#9679; Street Race — Delta Towers loop<br>&#9679; Taxi Fares — pick up riders<br>&#9679; Stunt Jump — Harbor ramp</div></div>
-      <div class="panel" style="margin-top:12px;"><div class="label">Progression</div><div id="map-stats" style="font-size:13px;line-height:1.9;margin-top:6px;"></div></div>
-      <div style="font-size:12px;color:#9fb8cc;margin-top:12px;">Press M to close the map.</div>
-    </div>
-  </div>
-</div>
-
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.min.js" } }
 </script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="panel"><div id="money">$1,250</div><div id="stars">☆☆☆☆☆</div></div>
+    <div class="panel" id="mission"><div id="mission-title">MISSION 1 — VALET RUSH</div><div id="mission-text">Drive the Broombroom S1 to the Garage. • Reward $500</div></div>
+    <div class="panel"><button id="btn-mute" style="padding:8px 14px;font-size:13px;">Sound: On</button></div>
+  </div>
+  <div id="minimap-wrap"><div id="minimap-label">EQUATOR CITY</div><br><canvas id="minimap" width="150" height="150"></canvas></div>
+  <div id="speedbox" class="panel"><div id="speed">0 km/h</div><div id="car-name">On foot — Ari "Kancil" Saputra</div><div id="damage-row">CAR CONDITION<div id="damage-bar"><div id="damage-fill"></div></div></div></div>
+  <div id="controls-hint">WASD drive / walk &nbsp;•&nbsp; E enter or steal car &nbsp;•&nbsp; SPACE handbrake drift &nbsp;•&nbsp; R respray at Garage &nbsp;•&nbsp; Click to shoot &nbsp;•&nbsp; SHIFT sprint</div>
+  <div id="drift">DRIFT +0</div>
+  <div id="toast"></div>
+</div>
+
+<div id="map-panel"><div id="map-title">EQUATOR CITY — FULL MAP</div><div id="map-legend"><b>Yellow diamond</b> mission target &nbsp;•&nbsp; <b style="color:#00ff88">Green</b> you &nbsp;•&nbsp; <b style="color:#6688ff">Blue</b> police &nbsp;•&nbsp; Garage west • Police HQ north-east • Plaza centre • Beach east</div></div>
+
+<div id="start-screen" class="screen">
+  <div class="card">
+    <div class="kicker">EQUATOR CITY • OPEN WORLD • CRIME</div>
+    <h1>EQUATOR <span>DRIVE</span></h1>
+    <div class="tagline">Steal it. Drift it. Outrun the law in the brightest city on the equator.</div>
+    <div class="story">You are <b>Ari "Kancil" Saputra</b>, a valet with fast hands and faster cars. The prototype EV <b>Broombroom S1</b> is yours for one day — run three jobs across Equator City, from the Garage to the Plaza to the waterfront, while the Equator Police close in. Steal a bajaj, an angkot, a taxi — anything with wheels. Drift for style, respray at the Garage to cool off, and do not get busted.</div>
+    <div class="btnrow"><button id="btn-new">NEW GAME</button><button id="btn-continue" class="secondary">CONTINUE</button></div>
+    <div id="save-line">No save yet — start a new game.</div>
+    <div class="keys"><b>W A S D</b> drive / walk &nbsp; <b>E</b> enter or steal car &nbsp; <b>SPACE</b> handbrake drift<br><b>R</b> respray at Garage &nbsp; <b>Click</b> shoot &nbsp; <b>SHIFT</b> sprint &nbsp; <b>M</b> mute</div>
+  </div>
+</div>
+
+<div id="end-screen" class="screen">
+  <div class="card">
+    <div id="end-title">BUSTED</div>
+    <div id="end-sub">The Equator Police caught Ari.</div>
+    <div class="btnrow"><button id="btn-resume">PAY UP &amp; KEEP DRIVING</button></div>
+  </div>
+</div>
+
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
