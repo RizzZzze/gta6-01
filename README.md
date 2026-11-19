@@ -1,56 +1,69 @@
-# Equator Drive — Make GTA 6 (gta6-01)
+# Equator Drive — Make GTA 6
 
 [![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 [![rank](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 [![reward](https://make.fun/badge/gta6-01/RizzZzze/gta6-01/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
-Open-world crime game set in **Equator City**, a bright tropical grid city.
-You are Ari "Kancil" Saputra, valet by day, wheelman by night, driving the
-electric prototype buggy **Broombroom S1**.
+A 3D open-world driving and action game set in Equator City. You are Ari
+"Kancil" Saputra — valet by day, wheelman by night. Steal cars, drift through
+traffic, outrun the police, and work your way through seven story jobs across
+nine districts, from Pasar Kanal to the neon streets of Distrik Neon.
 
-## Play
+## The city
 
-- **WASD / arrows** — drive or walk. **Space** — handbrake drift (smoke + DRIFT score).
-- **E** — enter / exit a car (every civilian car can be stolen). **F** — shoot on foot.
-- **G** — respray at the garage (Plaza Merdeka, saves to your garage). **M** — full city map.
-- Wanted stars rise when you speed past police or shoot; police sedans and the
-  Interceptor chase you at 2+ stars. Vehicle condition falls on hard hits.
-- 7 story jobs across 9 districts, from a valet shift to a midnight run to the harbour.
-- Progress saves to localStorage (money, garage, active job) and shows on the start screen.
+Equator City is a bright, dense grid city with a plaza fountain, a green hill
+park, a harbour, a campus, and a neon district that comes alive after dark.
+Shop signs, streetlights, traffic, and pedestrians fill the streets, and every
+building window glows warm at night.
 
 ## Vehicles
 
-Bajaj (nimble), angkot minibus (heavy), open-bed pickup (heavy), sedan and taxi
-(balanced), police sedan + Interceptor (pursuit), and the hero Broombroom S1
-(fast / fun — open-frame electric buggy, big off-road wheels, magenta accents).
+- **Broombroom S1** — the hero car: an open-frame electric buggy prototype,
+  fast, nimble, and built for drifting. It is yours from the start.
+- **Bajaj** — small and nimble. **Angkot minibus** and **open pickup** — heavy
+  and slow to turn. **Sedan** and **taxi** — balanced all-rounders.
+- **Police sedan** and **interceptor** — they will chase you when your wanted
+  level rises.
 
-## Tech
+Every civilian car can be stolen. Each vehicle has its own handling, and
+damage shows on the car and on the condition meter in the HUD.
 
-- Three.js (vendored under `game/vendor/`), ES modules + import map, no build step.
-- Static files in `game/` — `game/index.html` loads offline with zero network requests.
-- Seeded RNG (`WORLD_SEED`) — same seed, same city, traffic and shots.
-- Deterministic shots: `game/index.html?shot=cover|start|night|map` renders a fixed
-  frame (cover = daytime drift chase, start = start screen over Plaza Merdeka,
-  night = neon on-foot combat, map = full city map with 7 jobs + 9 districts).
+## What you can do
 
-## Run it
+- Drive and walk around the city in third person.
+- Steal any parked or moving civilian car.
+- Handbrake-drift to build a drift score, with smoke pouring off the rear
+  wheels.
+- Take on story jobs: valet shifts, deliveries, taxi rushes, midnight runs,
+  and a grand tour of the city. Each job pays out and updates its status.
+- Fight on foot and attract police attention — the wanted stars climb, and
+  patrol cars hunt you down.
+- Keep your cars in the garage at Plaza Merdeka and respray them there.
+- Check the full city map with all nine districts and the job list.
+- Progress is saved automatically in the browser.
+
+## Controls
+
+| Key | Action |
+| --- | --- |
+| W A S D | Drive / walk |
+| Space | Handbrake drift |
+| E | Enter / exit car |
+| F | Shoot (on foot) |
+| G | Respray at the garage |
+| M | City map |
+
+## How to run
+
+The game is a static site with no build step. Because it uses ES modules, it
+must be served over HTTP — opening the file directly will not work.
 
 ```sh
-cd game && python3 -m http.server 8080
+cd game
+python3 -m http.server 8123
 ```
 
-Then open http://localhost:8080 in desktop Chrome.
+Then open <http://localhost:8123> in a browser.
 
-## Enter it
-
-```sh
-node main.ts
-```
-
-`main.ts` copies `game/` and `screenshots/` to the output directory
-(`$MAKEFUN_OUTPUT_DIR`, default `/output`) and writes `dossier.json` with the
-make.fun kit (`vendor/makefun-game.ts`, verbatim copy).
-
----
-
-<sub>Entered on [make.fun](https://make.fun/?ref=e054nszg&utm_source=github&utm_medium=readme&utm_campaign=gta6-01) · AI agents build software for cash rewards</sub>
+Built with Three.js (vendored, no network needed), fully offline, with a
+seeded world so every run generates the same city.
