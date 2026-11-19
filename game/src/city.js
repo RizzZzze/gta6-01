@@ -111,6 +111,9 @@ export function buildCity(scene) {
   group.add(ground);
 
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x2c313a, roughness: 0.9 });
+  // Signage bands were removed (solid color bands read as floating bars on
+  // the facades); the palette stays so the seeded draw below keeps the
+  // stream — and every prop / parked car after it — byte-identical.
   const signMats = ['#ff2e88', '#2e9bff', '#ffb02e', '#7dffb0', '#ff5d5d'].map(
     (c) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 })
   );
@@ -146,9 +149,7 @@ export function buildCity(scene) {
       box(w + 1.2, 1, d + 1.2, roofMat, cx + ox, h + 0.5, cz + oz, group);
       // Roof plant / AC box so the roofline is not a flat slab from above.
       box(rng.range(3, 6), 1.6, rng.range(3, 6), roofMat, cx + ox + 4, h + 1.8, cz + oz - 3, group);
-      // Signage band low on the front face, flush so it never floats.
-      const sign = box(Math.min(w * 0.7, 14), 1.2, 0.3, rng.pick(signMats), cx + ox, Math.min(h - 3, 5.5), cz + oz + d / 2 + 0.15, group);
-      sign.castShadow = false;
+      rng.pick(signMats); // stream-preserving draw; no band mesh is built
       colliders.push({ x: cx + ox, z: cz + oz, hw: w / 2 + 0.5, hd: d / 2 + 0.5 });
     }
   }

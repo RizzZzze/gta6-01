@@ -98,13 +98,35 @@ function makePlayerMesh() {
   const jacket = new THREE.MeshStandardMaterial({ color: 0xff2e88, roughness: 0.8 });
   const skin = new THREE.MeshStandardMaterial({ color: 0xc98a5a, roughness: 0.8 });
   const pants = new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.95 });
+  const gunmetal = new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: 0.4, metalness: 0.6 });
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 0.85, 8), jacket);
   body.position.y = 0.95; body.castShadow = true; g.add(body);
+  // Pale chest stripe so the torso reads as a jacket at night, not a capsule.
+  const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.245, 0.26, 0.09, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffe3ef, roughness: 0.6 }));
+  stripe.position.y = 1.18; g.add(stripe);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8), skin);
   head.position.y = 1.62; head.castShadow = true; g.add(head);
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.08, 10),
     new THREE.MeshStandardMaterial({ color: 0x111318, roughness: 0.7 }));
   cap.position.y = 1.8; g.add(cap);
+  // Shoulders + arms angled forward, hands together at the front: the
+  // silhouette reads as a person holding a weapon, from any angle.
+  for (const sx of [-0.27, 0.27]) {
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), jacket);
+    shoulder.position.set(sx, 1.33, 0); g.add(shoulder);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.52, 6), jacket);
+    arm.position.set(sx * 0.92, 1.08, 0.16);
+    arm.rotation.x = -0.85; g.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), skin);
+    hand.position.set(sx * 0.7, 0.88, 0.36); g.add(hand);
+  }
+  // Pistol held forward at chest height, barrel toward the muzzle flash.
+  const gun = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.13, 0.5), gunmetal);
+  gun.position.set(0.1, 1.28, 0.45); g.add(gun);
+  const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.2),
+    new THREE.MeshStandardMaterial({ color: 0x8a94a0, roughness: 0.3, metalness: 0.8 }));
+  barrel.position.set(0.1, 1.3, 0.76); g.add(barrel);
   for (const sx of [-0.12, 0.12]) {
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 6), pants);
     leg.position.set(sx, 0.28, 0); g.add(leg);
@@ -574,6 +596,23 @@ function setupShot() {
     missions.jobIndex = 5;
     missions.startJob();
     hud.bannerTimer = 0.4;
+    // Streetlight pools on the ground so the night foreground reads:
+    // fixed warm circles along the street, under the guard line, and in
+    // the foreground by the camera. Deterministic, shot-only.
+    const poolCanvas = document.createElement('canvas');
+    poolCanvas.width = poolCanvas.height = 128;
+    const pctx = poolCanvas.getContext('2d');
+    const grad = pctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255,190,90,0.5)');
+    grad.addColorStop(0.6, 'rgba(255,170,70,0.18)');
+    grad.addColorStop(1, 'rgba(255,170,70,0)');
+    pctx.fillStyle = grad; pctx.fillRect(0, 0, 128, 128);
+    const poolMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(poolCanvas), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    for (const [px, pz, pr] of [[120, 147, 7], [112, 168, 6], [100, 162, 6]]) {
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(pr, 24), poolMat);
+      pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.03, pz);
+      scene.add(pool);
+    }
     camera.position.set(104, 3.2, 170);
     camera.lookAt(124, 1.3, 142);
   }
