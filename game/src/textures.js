@@ -50,35 +50,48 @@ export function grassTexture(rng) {
   });
 }
 
-// Building facade: window grid. litRatio = fraction of windows glowing warm.
-// Day: mostly dark glass, few lit. Night: most lit warm yellow.
-export function facadeTexture(base, rng, litRatio, night) {
-  return canvasTex(256, 512, (g, w, h) => {
-    g.fillStyle = base; g.fillRect(0, 0, w, h);
-    // subtle vertical panel shading
-    for (let x = 0; x < w; x += 32) {
-      g.fillStyle = 'rgba(0,0,0,0.08)'; g.fillRect(x, 0, 2, h);
-    }
-    const cols = 6, rows = 12;
+// Building facade: window grid, drawn ONCE into two canvases sharing the same
+// lit-window pattern — colour map + emissive map (black except lit windows).
+// R2 lesson: swapping the night texture alone is NOT enough; windows need a
+// real emissive map or they stay dark.
+export function facadeTextures(base, rng, litRatio, night) {
+  const cols = 6, rows = 12;
+  const lit = [];
+  for (let r = 0; r < rows; r++) {
+    lit.push([]);
+    for (let c = 0; c < cols; c++) lit[r].push(rng.chance(litRatio));
+  }
+  const drawWindows = (g, w, h, emissiveOnly) => {
     const cw = w / cols, ch = h / rows;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = c * cw + 5, y = r * ch + 6, ww = cw - 10, hh = ch - 12;
-        if (rng.chance(litRatio)) {
+        if (lit[r][c]) {
           g.fillStyle = night ? rng.pick(['#ffd97a', '#ffbe4d', '#ffe9a8', '#ffb347']) : '#ffe6a0';
           g.fillRect(x, y, ww, hh);
-          g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(x, y, ww, 3);
-        } else {
+          if (!emissiveOnly) { g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(x, y, ww, 3); }
+        } else if (!emissiveOnly) {
           g.fillStyle = night ? '#1c2433' : '#2b3a4d';
           g.fillRect(x, y, ww, hh);
           g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(x, y, ww, 4);
         }
-        g.strokeStyle = 'rgba(0,0,0,0.35)'; g.strokeRect(x, y, ww, hh);
+        if (!emissiveOnly) { g.strokeStyle = 'rgba(0,0,0,0.35)'; g.strokeRect(x, y, ww, hh); }
       }
     }
-    // ground-floor shop band
+  };
+  const map = canvasTex(256, 512, (g, w, h) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 32) {
+      g.fillStyle = 'rgba(0,0,0,0.08)'; g.fillRect(x, 0, 2, h);
+    }
+    drawWindows(g, w, h, false);
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, h - 42, w, 42);
   });
+  const emissive = canvasTex(256, 512, (g, w, h) => {
+    g.fillStyle = '#000000'; g.fillRect(0, 0, w, h);
+    drawWindows(g, w, h, true);
+  });
+  return { map, emissive };
 }
 
 // Shop sign — text drawn upright, used on a plane facing the street.

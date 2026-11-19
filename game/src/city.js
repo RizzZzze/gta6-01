@@ -2,7 +2,7 @@
 // Grid city, real facades with lit windows, upright shop signs, neon at night,
 // streetlight pools, trees, park + plaza, 9 districts, 7 story jobs.
 import * as THREE from 'three';
-import { asphaltTexture, pavementTexture, grassTexture, facadeTexture, signTexture, neonTexture, lightPoolTexture } from './textures.js';
+import { asphaltTexture, pavementTexture, grassTexture, facadeTextures, signTexture, neonTexture, lightPoolTexture } from './textures.js';
 import { buildVehicle } from './vehicles.js';
 
 export const DISTRICTS = [
@@ -40,16 +40,23 @@ const SHOPS = [
 
 const NEONS = ['NEON', 'BAR 24H', 'KARAOKE', 'RAMEN', 'DISCO', 'HOTEL'];
 
-function building(scene, rng, night, x, z, w, d, h, base) {
-  const tex = facadeTexture(base, rng, night ? 0.55 : 0.14, night);
+function building(scene, rng, night, x, z, w, d, h, base, registry) {
+  const { map: tex, emissive } = facadeTextures(base, rng, night ? 0.55 : 0.14, night);
   tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(Math.max(1, Math.round(w / 12)), Math.max(1, Math.round(h / 14)));
-  const side = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 });
+  emissive.wrapS = THREE.RepeatWrapping; emissive.wrapT = THREE.RepeatWrapping;
+  emissive.repeat.copy(tex.repeat);
+  // R2 lesson: lit windows need a real emissive map, not just a bright texture.
+  const side = new THREE.MeshStandardMaterial({
+    map: tex, emissiveMap: emissive, emissive: 0xffffff,
+    emissiveIntensity: night ? 0.7 : 0.08, roughness: 0.85,
+  });
   const roof = new THREE.MeshStandardMaterial({ color: 0x565660, roughness: 0.95 });
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, roof, roof, side, side]);
   m.position.set(x, h / 2, z);
   m.castShadow = true; m.receiveShadow = true;
   scene.add(m);
+  if (registry) registry.push({ x, z, w, d, h });
   // rooftop box (AC / water tank) so roofs are not flat slabs
   if (rng.chance(0.7)) {
     const box = new THREE.Mesh(new THREE.BoxGeometry(w * 0.25, 1.2, d * 0.25),
@@ -173,6 +180,7 @@ export function buildCity(scene, rng, night) {
   const trafficSpots = [];
   const pedSpots = [];
   const parked = [];
+  const buildings = [];
   let shopIdx = 0, neonIdx = 0;
   for (const bx of [-60, 0, 60]) {
     for (const bz of [-60, 0, 60]) {
@@ -187,7 +195,7 @@ export function buildCity(scene, rng, night) {
       for (let i = 0; i < n; i++) {
         const w = rng.range(14, 22), d = rng.range(14, 22), h = rng.range(9, 30);
         const x = bx + rng.range(-18, 18), z = bz + rng.range(-18, 18);
-        building(scene, rng, night, x, z, w, d, h, rng.pick(bases));
+        building(scene, rng, night, x, z, w, d, h, rng.pick(bases), buildings);
       }
       // One shop sign per block, on the face toward the nearest road (upright).
       const shop = SHOPS[shopIdx++ % SHOPS.length];
@@ -209,22 +217,46 @@ export function buildCity(scene, rng, night) {
         p.rotation.y = p.position.z > bz ? 0 : Math.PI;
         scene.add(p);
       }
-      // Guaranteed neon on the avenue for the night shot: south face of the
-      // Distrik Neon block, facing the road (and the night camera).
+      // Guaranteed neon on the avenue for the night shot: blade signs jutting
+      // from the south facades, faces turned WEST (-x) toward the night camera
+      // approaching down the avenue (R2 lesson: neon must face the camera —
+      // a sign facing -z reads edge-on and skewed from this angle).
       if (night && bx === 60 && bz === 0) {
         const p = new THREE.Mesh(new THREE.PlaneGeometry(9, 2.2),
           new THREE.MeshBasicMaterial({ map: neonTexture('NEON', '#ff2e88'), transparent: true }));
         p.position.set(62, 4.6, -24.2);
-        p.rotation.y = Math.PI;
+        p.rotation.y = -Math.PI / 2;
         scene.add(p);
         const p2 = new THREE.Mesh(new THREE.PlaneGeometry(8, 2),
           new THREE.MeshBasicMaterial({ map: neonTexture('BAR 24H', '#22e6ff'), transparent: true }));
         p2.position.set(74, 4.2, -24.2);
-        p2.rotation.y = Math.PI;
+        p2.rotation.y = -Math.PI / 2;
         scene.add(p2);
       }
     }
   }
+
+  // Deterministic shop signs for the cover shot, mounted on REAL building
+  // south faces flanking the cover avenue (z = -30). Upright, facing the
+  // camera (rotY 0 = faces +z) — never a -x/-z flip (R2 proved flips change
+  // nothing; facing is what matters). Two DIFFERENT buildings, both inside
+  // the cover frame (|x| <= 25); the sign on the wide face is shifted toward
+  // the camera axis so it is fully in frame, not half-cut at the edge.
+  const pickFace = (nearX, used) => {
+    let best = null, bestScore = Infinity;
+    for (const b of buildings) {
+      if (used && b.x === used.x && b.z === used.z) continue;
+      const face = b.z + b.d / 2; // south face, toward the avenue
+      if (face > -24.5 || face < -50 || Math.abs(b.x) > 25) continue;
+      const score = Math.abs(b.x - nearX) + Math.abs(face + 30) * 2;
+      if (score < bestScore) { bestScore = score; best = { x: b.x, z: b.z, w: b.w, face }; }
+    }
+    return best;
+  };
+  const f1 = pickFace(-14, null);
+  if (f1) shopSign(scene, Math.max(f1.x - 5, f1.x - f1.w / 2 + 3.6), 3.4, f1.face + 0.3, 0, SHOPS[0]);
+  const f2 = pickFace(16, f1);
+  if (f2) shopSign(scene, Math.max(f2.x - 5, f2.x - f2.w / 2 + 3.6), 3.4, f2.face + 0.3, 0, SHOPS[5]);
 
   // Plaza Merdeka fountain.
   const basin = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.5, 1, 24),
